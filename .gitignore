@@ -1,0 +1,5 @@
+Datasets/*
+results/*
+weights/*
+.vscode/
+__pycache__/
