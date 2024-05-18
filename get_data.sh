@@ -31,6 +31,7 @@ extract_file() {
 
 # Create directory if it doesn't exist
 create_directory "Datasets"
+create_directory "Datasets/gateway"
 
 # Download file if it doesn't exist
 download_file "https://aev-autonomous-driving-dataset.s3.eu-central-1.amazonaws.com/camera_lidar_semantic_bboxes.tar" "Datasets/camera_lidar_semantic_bboxes.tar"
@@ -39,3 +40,9 @@ download_file "https://aev-autonomous-driving-dataset.s3.eu-central-1.amazonaws.
 # Extract file if it exists
 extract_file "Datasets/camera_lidar_semantic_bboxes.tar" "Datasets/camera_lidar_semantic_bboxes/"
 extract_file "Datasets/camera_lidar_semantic_bus.tar" "Datasets/bus/"
+
+bus_folders=$(find "Datasets/" -maxdepth 1 -type d -name "2018*")
+
+for folder in $bus_folders; do
+    mv "$folder" Datasets/gateway/
+done
