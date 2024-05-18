@@ -112,18 +112,7 @@ insult_list=['/gpfs/space/home/alimahar/hydra/Datasets/A2D2/semantic/camera_lida
 def process_image(img_path):
     if img_path in insult_list:
         return 0
-    # out_path=img_path.replace('/camera/', '/depth/').replace('_camera_','_depth_')
-    # print(img_path)
-    # if os.path.exists(out_path):
-        # print("  :/  Exist")
-        # return 0
-    # out_dir = os.path.dirname(out_path)
-    # if not os.path.exists(out_dir):
-    #     try:
-    #         os.makedirs(out_dir)
-    #     except FileExistsError:
-    #         pass
-    
+
     image = Image.open(img_path)
     # image=self.transforms(image)
     lidar_path=img_path.replace('/camera/', '/lidar/').replace('_camera_','_lidar_').replace('png','npz')
