@@ -15,7 +15,7 @@ import torchvision.transforms.functional as F
 import torchvision.models as models
 from skimage.util import random_noise
 import glob
-from datasets import A2D2_steering,A2D2_seg,A2D2_symmetric,A2D2_depth,A2D2_box
+from datasets import A2D2_steering,A2D2_seg,A2D2_symmetric,A2D2_depth,A2D2_box,a2d2_dataloader
 
 import random
 import torch
@@ -53,41 +53,7 @@ base_name = f"universal_{train_mode}"
 
 
 
-
-
-TRAIN_SPLIT = 0.8
-VAL_SPLIT = 0.2
-
-
-BASE_PATH_BOX = "/gpfs/space/home/alimahar/hydra/Datasets/A2D2/camera_lidar_semantic_bboxes/" 
-
-
-all_folders_box = sorted(os.listdir(BASE_PATH_BOX))
-all_folders_box = all_folders_box[1:-3]
-
-
-A2D2_path_train=[]
-A2D2_path_val = []
-
-
-
-for folder in all_folders_box:
-    folder_path = os.path.join(BASE_PATH_BOX, folder)
-    
-    # Get a list of all files in the current folder
-    files_in_folder = sorted(glob.glob(os.path.join(folder_path, "camera/cam_front_center/*.png")))
-    
-    
-    # Calculate the split indices
-    split_index = int(len(files_in_folder) * TRAIN_SPLIT)
-    
-    # Split the data into training and validation sets for the current folder
-    train_set = files_in_folder[:split_index]
-    val_set = files_in_folder[split_index:]
-    
-    # Accumulate the sets for each folder
-    A2D2_path_train.extend(train_set)
-    A2D2_path_val.extend(val_set)
+A2D2_path_train,A2D2_path_val=a2d2_dataloader()
 
 
 

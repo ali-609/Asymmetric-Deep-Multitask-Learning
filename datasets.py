@@ -49,59 +49,6 @@ class A2D2_symmetric(Dataset):
 
     
 
-
-
-
-class AllDatasets2(Dataset): #calculate mean here
-    def __init__(self, dataset1, dataset2,batch):
-        # self.transform
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
-        self.batch=int(batch)
-
-    def __len__(self):
-        return int((len(self.dataset1) + len(self.dataset2))/self.batch)-1
-
-    def __getitem__(self, index):
-        image = torch.empty((self.batch, 3, 224, 224))
-        segmentation = torch.empty((self.batch,43, 224, 224))
-        ### ### ### $$$ $$$
-
-        if index*self.batch < len(self.dataset1):
-            steering = torch.empty((self.batch, 21))
-            for i in range(0,self.batch):
-
-                image[i] = self.dataset1[index*self.batch + i]['image']
-                segmentation[i] = torch.from_numpy(self.dataset1[index*self.batch + i]['segmentation']) #torch.from_numpy(
-                steering[i] = self.dataset1[index*self.batch + i]['steering']
-                
-            return {'image':image, 'segmentation': segmentation, 'steering': steering }
-        else:
-            index=index-(len(self.dataset1)/index*self.batch)
-            steering =  torch.empty((self.batch, 0)) 
-
-            for i in range(0,self.batch):
-                image[i] = self.dataset2[index*self.batch + i]['image']
-                segmentation[i] = self.dataset2[index*self.batch + i ]['segmentation']
-                steering[i] = torch.tensor([], dtype=torch.float32)
-
-            return  {'image':image, 'segmentation': segmentation, 'steering': steering }
-
-class AllDatasets(Dataset): #calculate mean here
-    def __init__(self, dataset1, dataset2):
-        # self.transform
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
-
-    def __len__(self):
-        return len(self.dataset1) + len(self.dataset2)
-
-    def __getitem__(self, index):
-        if index < len(self.dataset1):
-            return self.dataset1[index]
-        else:
-            return self.dataset2[index - len(self.dataset1)]
-
 class A2D2_steering(Dataset):#standarilization 
     def __init__(self, path):
         self.image_paths = path
@@ -171,85 +118,6 @@ class A2D2_seg(Dataset): #21 steering angle and segmentation
     
 
        
-
-
-class DatasetA2D2(Dataset): #21 steering angle and segmentation
-    def __init__(self, path):
-       self.image_paths = path
-       self.transforms = transforms.Compose([transforms.Resize((256, 256)),
-                                             transforms.ToTensor()])
-       self.transforms_seg = transforms.Compose([transforms.ToTensor()
-                                            ])
-       
-   
-    def __len__(self):
-        return len(self.image_paths)
-
-    def __getitem__(self, index):
-        img_path=self.image_paths[index]
-        seg_path=img_path.replace('/camera/', '/multi_label/').replace('_camera_', '_label_').replace('.png','.npy')
-        # json_path=self.convert_path(img_path)  
-        json_path=img_path.replace('/camera_lidar_semantic/', '/bus/').replace('/camera/cam_front_center/','/bus/').replace('png','json')
-
-
-        if not os.path.exists(json_path):
-            steering_angles = np.zeros(21, dtype=np.float32)
-        else:
-            with open(json_path) as json_file:
-                json_data = json.load(json_file)
-                steering_angles = json_data.get('steering_angles')
-        
-                if steering_angles is None or not steering_angles:
-                    steering_angles = np.zeros(21, dtype=np.float32)
-
-            json_file.close()
-        
-        
-        steering=torch.tensor(steering_angles[-10:], dtype=torch.float32)
-        steering/=70
-        
-        image = Image.open(img_path).convert('RGB') 
-        image=self.transforms(image)
-
-        segmentation = np.load(seg_path)#.astype(np.float32)
-
-        
-             
-
-
-
-        return {'image':image, 'segmentation': segmentation, 'steering': steering }
-    
-
-
-        
-
-
-class DatasetKitty(Dataset): #image and segmentation
-    def __init__(self, path):
-        self.image_paths = path
-        self.transforms = transforms.Compose([transforms.Resize((224, 224)),
-                                              transforms.ToTensor()])
-
-    
-    def __len__(self):
-        return len(self.image_paths) 
-
-
-    def __getitem__(self, index):
-        img_path=self.image_paths[index]
-        seg_path=img_path.replace('/image_2/', '/semantic_rgb/')
-
-
-        image = Image.open(img_path)
-        segmentation = Image.open(seg_path)
-
-        image=self.transforms(image)
-        segmentation=self.transforms(segmentation)
-
-        steering=[]
-        steering=torch.tensor(steering, dtype=torch.float32)
-        return {'image':image, 'segmentation': segmentation, 'steering': steering }
 
 
 class A2D2_box(Dataset):
@@ -370,21 +238,56 @@ class A2D2_depth(Dataset):
         # depth = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
 
         return {'dt_label':'A2D2_depth','image':image,'A2D2_depth': depth}
+    
+
+
+def a2d2_dataloader(base_path="./Datasets/camera_lidar_semantic_bboxes/", train_split=0.8, val_split=0.2):
+    insult_list=['./Datasets/camera_lidar_semantic_bboxes/20180810_142822/camera/cam_front_center/20180810142822_camera_frontcenter_000000004.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000020.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000022.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000041.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000049.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000050.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000055.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000057.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132300/camera/cam_front_center/20181107132300_camera_frontcenter_000000063.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132730/camera/cam_front_center/20181107132730_camera_frontcenter_000000035.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132730/camera/cam_front_center/20181107132730_camera_frontcenter_000000051.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132730/camera/cam_front_center/20181107132730_camera_frontcenter_000000055.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181107_132730/camera/cam_front_center/20181107132730_camera_frontcenter_000000061.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181108_103155/camera/cam_front_center/20181108103155_camera_frontcenter_000000028.png',
+             './Datasets/camera_lidar_semantic_bboxes/20181108_103155/camera/cam_front_center/20181108103155_camera_frontcenter_000000033.png'
+             ]
+
+    insult_list=[os.path.abspath(path) for path in insult_list]
+
+
+
+    all_folders = sorted(os.listdir(base_path))
+    all_folders = all_folders[0:-3]  # Adjust according to your specific needs
+    
+    A2D2_path_train = [] 
+    A2D2_path_val = []
+
+    for folder in all_folders:
+        folder_path = os.path.join(base_path, folder)
+        
+        # Get a list of all files in the current folder
+        files_in_folder = np.array(sorted(glob.glob(os.path.join(folder_path, "camera/cam_front_center/*.png"))))
+        files_in_folder = files_in_folder[~np.isin(files_in_folder, insult_list)]
+        
+        # Calculate the split indices
+        split_index = int(len(files_in_folder) * train_split)
+        
+        # Split the data into training and validation sets for the current folder
+        train_set = files_in_folder[:split_index]
+        val_set = files_in_folder[split_index:]
+        
+        # Accumulate the sets for each folder
+        A2D2_path_train.extend(train_set)
+        A2D2_path_val.extend(val_set)
+    
+    return A2D2_path_train, A2D2_path_val
+
        
-# BASE_PATH = sorted(glob.glob("/gpfs/space/home/alimahar/hydra/Datasets/A2D2/semantic/camera_lidar_semantic/*/camera/cam_front_center/*.png"))
 
-# test_dt=A2D2_depth(BASE_PATH)
-
-
-# import time
-# 
-# start_time = time.time()
-# sample=test_dt[1]
-# end_time = time.time()
-
-
-
-# cv2.imwrite('depth_test_interpolated.png', d)
-
-# print("Test time:",end_time-start_time)
-# print("Depth shape", sample["depth"].shape)

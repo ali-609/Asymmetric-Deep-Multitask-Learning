@@ -50,10 +50,7 @@ BATCH_SIZE = 1
 TRAIN_SPLIT = 0.8
 VAL_SPLIT = 0.2
 
-
-# Balance asymmetric train with epoch +
-# Implement Batchnowm on symmetric model + 
-# Coeeficient for symmetric task
+cient for symmetric task
 
 
 BASE_PATH_BOX = "/gpfs/space/home/alimahar/hydra/Datasets/A2D2/camera_lidar_semantic_bboxes/" 

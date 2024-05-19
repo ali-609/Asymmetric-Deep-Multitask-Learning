@@ -1,0 +1,6 @@
+
+Epoch 1/10:   0%|                                                                                                                                        | 0/2475 [00:03<?, ?it/s]
+Traceback (most recent call last):
+  File "/gpfs/space/home/alimahar/hydra/train_single_task.py", line 154, in <module>
+    loss += loss_value
+TypeError: unsupported operand type(s) for +=: 'L1Loss' and 'Tensor'

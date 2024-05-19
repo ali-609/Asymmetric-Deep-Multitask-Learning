@@ -114,8 +114,6 @@ best_val_loss=999999
 config = {
     "learning_rate": lr,
     "batch_segmentation": BATCH_SIZE
-
-
 }
 
 

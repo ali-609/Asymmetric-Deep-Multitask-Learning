@@ -1,0 +1,88 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Epoch 1/10: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2475/2475 [02:02<00:00, 20.25it/s]
+
+
+Epoch 1/10:  14%|█████████████████▉                                                                                                              | 87/622 [00:04<00:27, 19.13it/s]
+Traceback (most recent call last):
+  File "/gpfs/space/home/alimahar/hydra/train_single_task.py", line 175, in <module>
+    output = model(inputs)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/gpfs/space/home/alimahar/hydra/models/pilotnet.py", line 48, in forward
+    x = self.features(x)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/modules/batchnorm.py", line 175, in forward
+    return F.batch_norm(
+  File "/gpfs/space/home/alimahar/.conda/envs/e2e/lib/python3.10/site-packages/torch/nn/functional.py", line 2482, in batch_norm
+    return torch.batch_norm(
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 39.39 GiB of which 12.81 MiB is free. Including non-PyTorch memory, this process has 39.37 GiB memory in use. Of the allocated memory 38.84 GiB is allocated by PyTorch, and 15.01 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
