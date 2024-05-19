@@ -1,0 +1,23 @@
+batch_sizes:
+  batch_backbone: 48
+  batch_steering: 24
+  batch_segmentation: 32
+  batch_box: 16
+  batch_depth: 16
+
+learning_rates:
+  backbone_lr: 0.002
+  segmentation_lr: 0.0002
+  steering_lr: 0.00004
+  box_lr: 0.00001
+  depth_lr: 0.00003
+
+coefficients:
+  steering_coef: 1
+  segmentation_coef: 80
+  box_coef: 400
+  depth_coef: 200
+
+n_epochs: 10
+
+num_workers: 8

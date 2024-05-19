@@ -3,7 +3,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 import numpy as np
-import pandas as pd
+
 import torch
 from torch.nn import L1Loss, MSELoss, HuberLoss
 from torch.utils.data import ConcatDataset, RandomSampler, WeightedRandomSampler
@@ -23,14 +23,13 @@ import torch.nn as nn
 from collections import OrderedDict
 from torchvision.models import resnet34
 import cv2
-from models.first_hydra import HydraNet
-from models.model_withUnet import HydraUNet
+
 from models.resnet_bifpn_depth import ResNETBiFPN
 import wandb
 from datetime import datetime
 import os
-from losses import YOLOLoss,DepthLoss,MaskedMSELoss,MaskedL1Loss
-
+from losses import YOLOLoss,DepthLoss
+import yaml
 
 import argparse
 
@@ -96,33 +95,59 @@ depth_loss=DepthLoss()
 ##############
 ##Parameters##
 ##############
-BATCH_SIZE = 4
+with open('./configs/symmetric_conf.yaml', 'r') as config_file:
+    config = yaml.safe_load(config_file)
 
-lr = 1e-5
+BATCH_SIZE = config['batch_size']
 
 
-n_epochs=40
+lr = config['learning_rate']
 
-grad_coef_str=1
-grad_coef_seg=5
-grad_coef_depth=8
-grad_coef_box=8
+
+n_epochs=config['n_epochs']
+coefficients = config['coefficients']
+num_workers=config['num_workers']
+
+
+grad_coef_str=coefficients['steering_coef']
+grad_coef_seg=coefficients['segmentation_coef']
+grad_coef_depth=coefficients['depth_coef']
+grad_coef_box=coefficients['box_coef']
+
+print("Batch size: ", BATCH_SIZE)
+
+
+print("Learning rate :", lr)
+
+
+print("Coefficients:")
+print(f"  Steering Coef: {grad_coef_str}")
+print(f"  Segmentation Coef: {grad_coef_seg}")
+print(f"  Box Coef: {grad_coef_box}")
+print(f"  Depth Coef: {grad_coef_depth}")
+
+print(f"Number of epochs: {n_epochs}")
 ##############
 ##Parameters##
 ##############
 
-best_val_loss=999999
+best_val_loss=float('inf')
 
 
-train_dataloader = DataLoader(A2D2_dataset_train, batch_size=BATCH_SIZE, shuffle=True,num_workers=16)
-val_dataloader = DataLoader(A2D2_dataset_val, batch_size=BATCH_SIZE, shuffle=False, num_workers=16)
+train_dataloader = DataLoader(A2D2_dataset_train, batch_size=BATCH_SIZE, shuffle=True,num_workers=num_workers)
+val_dataloader = DataLoader(A2D2_dataset_val, batch_size=BATCH_SIZE, shuffle=False, num_workers=num_workers)
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 config = {
     "learning_rate": lr,
-    "batch": 4
+    "batch": BATCH_SIZE,
+
+    "coef_steering": grad_coef_str,
+    "coef_segmentation": grad_coef_seg,
+    "coef_box": grad_coef_box, 
+    "coef_depth": grad_coef_depth
 }
 
 

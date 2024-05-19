@@ -28,7 +28,7 @@ from datetime import datetime
 import os
 from losses import YOLOLoss,DepthLoss
 
-
+import yaml
 import argparse
 
 torch.manual_seed(42)
@@ -39,19 +39,19 @@ print('Time of run: ', current_time)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--train-mode', choices=['segmentation', 'steering', 'box', 'depth'])
-parser.add_argument('--learning-rate', type=float, default=1e-5)
-parser.add_argument('--batch-size', type=int, default=4)
-parser.add_argument('--num-workers', type=int, default=8)
-parser.add_argument('--n-epoch', type=int, default=40)
+
+with open('./configs/single_task_conf.yaml', 'r') as config_file:
+    config_yaml = yaml.safe_load(config_file)
+
 
 
 args = parser.parse_args()
 
 train_mode = args.train_mode
-BATCH_SIZE=args.batch_size
-lr=args.learning_rate
-num_workers = args.num_workers
-n_epochs = args.n_epoch
+BATCH_SIZE=config_yaml['batch_size']
+lr=config_yaml['learning_rate']
+num_workers = config_yaml['num_workers']
+n_epochs = config_yaml['n_epochs']
 
 print("Train mode: ",train_mode)
 

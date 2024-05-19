@@ -3,31 +3,25 @@ from pathlib import Path
 from tqdm import tqdm
 
 import numpy as np
-import pandas as pd
+
 import torch
 from torch.nn import L1Loss, MSELoss, HuberLoss
 from torch.utils.data import ConcatDataset, RandomSampler, WeightedRandomSampler
 
 from torch.utils.data import Dataset, random_split, DataLoader,ConcatDataset
-import torchvision
-from torchvision import transforms
-import torchvision.transforms.functional as F
+
 import yaml
 import glob
-from datasets import A2D2_steering,A2D2_seg,A2D2_box,A2D2_depth
+from datasets import A2D2_steering,A2D2_seg,A2D2_box,A2D2_depth,a2d2_dataloader
 
 import random
 import torch
 import torch.nn as nn
-from collections import OrderedDict
-from torchvision.models import resnet34
-import cv2
-from models.first_hydra import HydraNet
-from models.model_withUnet import HydraUNet
+
 # from models.dino_backbone import DinoBackBone
 # from models.resnet_bifpn import ResNETBiFPN
 from models.resnet_bifpn_depth import ResNETBiFPN
-from losses import YOLOLoss,DepthLoss,MaskedMSELoss,MaskedL1Loss
+from losses import YOLOLoss,DepthLoss
 import wandb
 from datetime import datetime
 import os
@@ -45,52 +39,7 @@ base_name = "universal_asymmetric"
 
 
 
-BATCH_SIZE = 1
-
-TRAIN_SPLIT = 0.8
-VAL_SPLIT = 0.2
-
-cient for symmetric task
-
-
-BASE_PATH_BOX = "/gpfs/space/home/alimahar/hydra/Datasets/A2D2/camera_lidar_semantic_bboxes/" 
-
-
-all_folders_box = sorted(os.listdir(BASE_PATH_BOX))
-# all_folders_box = all_folders_box[0:-2]
-all_folders_box = all_folders_box[1:-3]
-
-
-A2D2_path_train_seg=[]
-A2D2_path_train_str=[]
-A2D2_path_train=[]
-
-A2D2_path_val_seg = []
-A2D2_path_val_str = [] 
-A2D2_path_val = []
-
-
-
-for folder in all_folders_box:
-    folder_path = os.path.join(BASE_PATH_BOX, folder)
-    
-    # Get a list of all files in the current folder
-    files_in_folder = sorted(glob.glob(os.path.join(folder_path, "camera/cam_front_center/*.png")))
-    
-    # Shuffle the list of files
-    # random.shuffle(files_in_folder)
-    
-    # Calculate the split indices
-    split_index = int(len(files_in_folder) * TRAIN_SPLIT)
-    
-    # Split the data into training and validation sets for the current folder
-    train_set = files_in_folder[:split_index]
-    val_set = files_in_folder[split_index:]
-    
-    # Accumulate the sets for each folder
-    A2D2_path_train.extend(train_set)
-    A2D2_path_val.extend(val_set)
-
+A2D2_path_train,A2D2_path_val=a2d2_dataloader()
 
 
 A2D2_dataset_train_seg=A2D2_seg(A2D2_path_train)
@@ -127,8 +76,6 @@ print('No of box validation Samples', len(A2D2_dataset_val_box),'\n')
 
 
 
-train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True,num_workers=35)
-val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=35)
 
 
 model = ResNETBiFPN()
@@ -157,13 +104,14 @@ depth_params=list(model.depth_head.parameters())
 ##Parameters##
 ##############
 # export 'PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True'
-with open('./asymmetric_conf.yaml', 'r') as config_file:
+with open('./configs/asymmetric_conf.yaml', 'r') as config_file:
     config = yaml.safe_load(config_file)
 
 batch_sizes = config['batch_sizes']
 learning_rates = config['learning_rates']
 coefficients = config['coefficients']
 n_epochs = config['n_epochs']
+num_workers=config['num_workers']
 
 
 batch_backbone = batch_sizes['batch_backbone']
@@ -207,6 +155,10 @@ print(f"Number of epochs: {n_epochs}")
 ##############
 
 
+train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True,num_workers=num_workers)
+val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=num_workers)
+
+
 backbone_optimizer = torch.optim.Adam(backbone_params, lr=backbone_lr/batch_backbone)
 segmentation_optimizer = torch.optim.Adam(segmentation_params, lr=segmentation_lr)
 steering_optimizer = torch.optim.Adam(steering_params, lr=steering_lr)
@@ -215,7 +167,7 @@ depth_optimizer= torch.optim.Adam(depth_params, lr=depth_lr)
 
 
 
-best_val_loss=999999
+best_val_loss=float('inf')
 
 config = {
     "learning_rate": backbone_lr,
@@ -228,7 +180,13 @@ config = {
     "batch_steering": batch_steering,
     "batch_box": batch_box,
     "batch_segmentation":batch_segmentation,
-    "batch_depth": batch_depth
+    "batch_depth": batch_depth,
+
+    "coef_steering": steering_coef,
+    "coef_segmentation": segmentation_coef,
+    "coef_box": box_coef, 
+    "coef_depth": depth_coef
+
 }
 
 
