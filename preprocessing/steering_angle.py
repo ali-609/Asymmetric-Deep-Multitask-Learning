@@ -5,7 +5,7 @@ import numpy as np
 
 rel_dirs=sorted(glob.glob('./Datasets/gateway/*/bus/*bus_signals.json'))
 
-dirs=absolute_paths = [os.path.abspath(path) for path in rel_dirs]
+dirs=[os.path.abspath(path) for path in rel_dirs]
 
 for file in dirs:
     print(file)
