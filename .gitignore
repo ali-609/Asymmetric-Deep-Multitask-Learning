@@ -2,5 +2,6 @@ Datasets/*
 Dabaseps/*
 results/*
 weights/*
+wandb/*
 .vscode/
 __pycache__/
