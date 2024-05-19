@@ -5,3 +5,6 @@ weights/*
 wandb/*
 .vscode/
 __pycache__/
+test_box_old.py
+test_depth_old.py
+test_seg_old.py

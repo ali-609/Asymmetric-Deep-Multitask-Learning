@@ -1,0 +1,15 @@
+asymmetric_weight: 'weights/universal_asymmetric_2024-05-07_20-56-31.pth'
+
+symmetric_weight: 'weights/universal_symmetric_2024-05-02_18-34-33.pth'
+
+single_task_weight:
+  segmentation: 'weights/segmentation_2024-04-21_00-16-07.pth' 
+  boundingbox: 'weights/yolo_2024-05-03_19-36-16.pth'
+  depth: 'weights/depth_2024-04-24_01-22-43.pth'
+
+universal_task_weight:
+  segmentation: 'weights/universal_segmentation_2024-05-01_10-42-53.pth'
+  boundingbox: 'weights/universal_box_2024-05-02_18-42-46.pth'
+  depth: 'weights/universal_depth_2024-05-01_10-41-17.pth'
+
+

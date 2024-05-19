@@ -15,7 +15,7 @@ import torchvision.transforms.functional as F
 # import torchvision.ops.box_iou as IOU_F 
 
 import glob
-from datasets import A2D2_steering,A2D2_seg,A2D2_box,A2D2_depth
+from datasets import A2D2_steering,A2D2_seg,A2D2_box,A2D2_depth,a2d2_dataloader
 
 import random
 import torch
@@ -32,114 +32,53 @@ from models.UNet import UNet
 from models.yolo_v1 import YOLOv1
 from models.DenseDepth import PTModel
 from models.pilotnet import PilotNet
-from losses import YOLOLoss,DepthLoss,MaskedMSELoss,MaskedL1Loss
+from losses import YOLOLoss,MaskedL1Loss
 import wandb
 from datetime import datetime
 import os
+import argparse
 
-from trainer import AsymmetricTrainer
 
 torch.manual_seed(42)
 random.seed(42)
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-print('Time of run: ', current_time)
+parser = argparse.ArgumentParser()
+parser.add_argument('--data', choices=['segmentation', 'steering', 'box', 'depth'])
+parser.add_argument('--model', choices=['PilotNet', 'UNet', 'YOLO', 'DenseDepth','MTL'])
+parser.add_argument('--weights')
 
-base_name = "asymmetric_three_task"
 
-
-
-
-def path_fixer(path, batch):
-    if len(path) % batch == 0:
-        return path
-
-    n_samples = batch - (len(path) % batch)
-    samples = random.sample(path, n_samples)
-
-    for sample in samples:
-        path.append(sample)
-
-    return path
+args = parser.parse_args()
 
 BATCH_SIZE = 1
 
-TRAIN_SPLIT = 0.8
-VAL_SPLIT = 0.2
+A2D2_path_train,A2D2_path_val=a2d2_dataloader()
 
 
 
-BASE_PATH_BOX = "/gpfs/space/home/alimahar/hydra/Datasets/A2D2/camera_lidar_semantic_bboxes/" 
-
-
-all_folders_box = sorted(os.listdir(BASE_PATH_BOX))
-# all_folders_box = all_folders_box[0:-2]
-all_folders_box = all_folders_box[1:-3]
-
-
-A2D2_path_train_seg=[]
-A2D2_path_train_str=[]
-A2D2_path_train=[]
-
-A2D2_path_val_seg = []
-A2D2_path_val_str = [] 
-A2D2_path_val = []
 
 
 
-for folder in all_folders_box:
-    folder_path = os.path.join(BASE_PATH_BOX, folder)
-    
-    # Get a list of all files in the current folder
-    files_in_folder = sorted(glob.glob(os.path.join(folder_path, "camera/cam_front_center/*.png")))
-    
-    # Shuffle the list of files
-    # random.shuffle(files_in_folder)
-    
-    # Calculate the split indices
-    split_index = int(len(files_in_folder) * TRAIN_SPLIT)
-    
-    # Split the data into training and validation sets for the current folder
-    train_set = files_in_folder[:split_index]
-    val_set = files_in_folder[split_index:]
-    
-    # Accumulate the sets for each folder
-    A2D2_path_train.extend(train_set)
-    A2D2_path_val.extend(val_set)
+
+if args.data == 'segmentation':
+    train_dataset = A2D2_seg(A2D2_path_train)
+    val_dataset = A2D2_seg(A2D2_path_val)
+elif args.data == 'steering':
+    train_dataset = A2D2_steering(A2D2_path_train)
+    val_dataset = A2D2_steering(A2D2_path_val)
+elif args.data == 'box':
+    train_dataset = A2D2_box(A2D2_path_train)
+    val_dataset = A2D2_box(A2D2_path_val)
+elif args.data == 'depth':
+    train_dataset = A2D2_depth(A2D2_path_train)
+    val_dataset = A2D2_depth(A2D2_path_val)
 
 
-
-A2D2_dataset_train_seg=A2D2_seg(A2D2_path_train)
-A2D2_dataset_train_str=A2D2_steering(A2D2_path_train)
-A2D2_dataset_train_box=A2D2_box(A2D2_path_train)
-A2D2_dataset_train_dep=A2D2_depth(A2D2_path_train)
-
-A2D2_dataset_val_seg=A2D2_seg(A2D2_path_val)
-A2D2_dataset_val_str=A2D2_steering(A2D2_path_val)
-A2D2_dataset_val_box=A2D2_box(A2D2_path_val)
-A2D2_dataset_val_dep=A2D2_depth(A2D2_path_val)
-
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-train_dataset = A2D2_dataset_train_box #ConcatDataset([A2D2_dataset_train_seg,A2D2_dataset_train_str,A2D2_dataset_train_box,A2D2_dataset_train_dep])      
-val_dataset =   A2D2_dataset_val_box#ConcatDataset([A2D2_dataset_val_seg,A2D2_dataset_val_str,A2D2_dataset_val_box,A2D2_dataset_val_dep])      
 
 
 print('No of total train samples', len(train_dataset))
 print('No of total validation Samples', len(val_dataset),'\n')
-
-print('No of segmentation train samples', len(A2D2_dataset_train_seg))
-print('No of segmentation validation Samples', len(A2D2_dataset_val_seg),'\n')
-
-
-print('No of steering train samples', len(A2D2_dataset_train_str))
-print('No of steering validation Samples', len(A2D2_dataset_val_str),'\n')
-
-print('No of box train samples', len(A2D2_dataset_train_box))
-print('No of box validation Samples', len(A2D2_dataset_val_box),'\n')
-
 
 
 
@@ -147,21 +86,28 @@ print('No of box validation Samples', len(A2D2_dataset_val_box),'\n')
 val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=10)
 
 
-model = ResNETBiFPN()
-model.load_state_dict(torch.load('weights/universal_symmetric_2024-05-02_18-34-33.pth'))
+if args.model == 'MTL':
+    model = ResNETBiFPN()
+    model.load_state_dict(torch.load('weights/universal_symmetric_2024-05-02_18-34-33.pth'))
+elif args.model == 'UNet':
+    model = UNet()
+    model.load_state_dict(torch.load('weights/segmentation_2024-04-21_00-16-07.pth'))
+elif args.model == 'YOLO':
+    model = YOLOv1()
+    model.load_state_dict(torch.load('weights/yolo_2024-05-03_19-36-16.pth'))
+elif args.model == 'DenseDepth':
+    model = PTModel()
+    model.load_state_dict(torch.load('weights/depth_2024-04-24_01-22-43.pth'))
+elif args.model == 'PilotNet':
+    model = PilotNet()
+    model.load_state_dict(torch.load('weights/steering_2024-04-25_04-27-04.pth'))
 
-# model = UNet()
-# model.load_state_dict(torch.load('weights/segmentation_2024-04-21_00-16-07.pth'))
+if args.weights:
+    model.load_state_dict(torch.load(args.weights))
 
-# model = YOLOv1()
-# model.load_state_dict(torch.load('weights/yolo_2024-05-03_19-36-16.pth' ))
 
-# model=PTModel()
-# model.load_state_dict(torch.load('weights/depth_2024-04-24_01-22-43.pth' ))
 
-# model = PilotNet()
-# model.load_state_dict(torch.load('weights/steering_2024-04-25_04-27-04.pth'))
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device=device)
 
 
@@ -169,13 +115,17 @@ model.to(device=device)
 class MaskedL1Loss(nn.Module):
     def __init__(self):
         super(MaskedL1Loss, self).__init__()
+        self.loss_func=nn.L1Loss()
 
     def forward(self, pred, target):
-        assert pred.dim() == target.dim(), "inconsistent dimensions"
-        valid_mask = (target>0).detach()
-        diff = target - pred
-        diff = diff[valid_mask]
-        self.loss = diff.abs().mean()
+        non_zero_mask = target != 0
+
+        # Masked predictions and targets
+        masked_predictions = pred[non_zero_mask]
+        masked_targets = target[non_zero_mask]
+        
+
+        self.loss = self.loss_func(masked_predictions,masked_targets)
         self.loss = self.loss * 123
         return self.loss
 
@@ -274,8 +224,8 @@ class BoxAccuracy(nn.Module):
 
  
                                  
-        return average_max_iou,target_exist_num
-    
+        return average_max_iou
+
 
 
 class SegmentationAccuracy(nn.Module):
@@ -287,104 +237,83 @@ class SegmentationAccuracy(nn.Module):
 
         target_values_max,target_indices_max=torch.max(target,dim=1)
 
-        # pred_indices_max==target_values_max
+
         TP=(pred_indices_max==target_indices_max).sum()
 
         acc=TP/(1024*1024)
 
-        # print(TP)
+
 
         
         return acc
 
-seg_metric=SegmentationAccuracy()
-box_metric=BoxAccuracy()
-depth_metric=MaskedL1Loss()
-str_metric=SteeringMetric()
-
-total_box_met=0.0
-total_seg_met=0.0
-total_depth_met=0.0
-total_str_met=0.0
-# with torch.no_grad():
-#         for i, data in enumerate(tqdm(val_dataloader)):
-#             inputs = data["image"].to(device=device) 
-#             segmentation_label = data["A2D2_seg"].to(device=device)
-
-#             # segmentation_output = model(inputs)
-#             steering_output, segmentation_output, box_output, depth_output = model(inputs)
-#             # print(segmentation_label)
-#             # print(segmentation_output)
-
-#             seg_acc=seg_metric(segmentation_output,segmentation_label)
-
-#             total_seg_met=total_seg_met+seg_acc
+if args.data == 'segmentation':
+    task_metric = SegmentationAccuracy()
+elif args.data == 'steering':
+    task_metric = SteeringMetric()
+elif args.data == 'box':
+    task_metric = BoxAccuracy()
+elif args.data == 'depth':
+    task_metric = MaskedL1Loss()
 
 
-            # exit()
+
+total_met=0.0
 
 with torch.no_grad():
-        for i, data in enumerate(tqdm(val_dataloader)):
-            inputs = data["image"].to(device=device) 
-            box_label = data["A2D2_box"].to(device=device)
-
-            # box_output = model(inputs)
-            steering_output, segmentation_output, box_output, depth_output = model(inputs)
-            # print(box_label.shape)
-            # print(box_output.shape)
-
-            # exit()
-
-            box_acc_val,target_exist_num=box_metric(box_output,box_label)
-
-            if box_acc_val>0.5 and target_exist_num>1:
-                 print(i,'----',box_acc_val)
-
-            total_box_met=total_box_met+box_acc_val
-            if i%1000==0:
-                 print(total_box_met/i)
+    for i, data in enumerate(tqdm(val_dataloader)):
+        inputs = data["image"].to(device=device)
+        # print(inputs.shape)
+        # exit()
 
 
-# with torch.no_grad():
-#         for i, data in enumerate(tqdm(val_dataloader)):
-#             inputs = data["image"].to(device=device) 
-#             depth_label = data["A2D2_depth"].to(device=device)
+        
+        if args.data == 'segmentation':
+            labels = data["A2D2_seg"].to(device=device)
+            if args.model == 'MTL':
+                steering_output, segmentation_output, box_output, depth_output = model(inputs)
+            else:
+                 segmentation_output=model(inputs)
 
-#             # depth_output = model(inputs)
-#             steering_output, segmentation_output, box_output, depth_output = model(inputs)
-#             # print(segmentation_label)
-#             # print(segmentation_output)
+            metric_value = task_metric(segmentation_output, labels)
+        elif args.data == 'steering':
+            labels = data["A2D2_steering"].to(device=device)
 
-#             depth_metric_val=depth_metric(depth_output,depth_label)
+            if args.model == 'MTL':
+                steering_output, segmentation_output, box_output, depth_output = model(inputs)
+            else:
+                 steering_output=model(inputs)
 
-#             total_depth_met=total_depth_met+depth_metric_val
+            metric_value = task_metric(labels, steering_output)
 
-# with torch.no_grad():
-#         for i, data in enumerate(tqdm(val_dataloader)):
-#             inputs = data["image"].to(device=device) 
-#             steering_label = data["A2D2_steering"].to(device=device)
+        elif args.data == 'box':
+            labels = data["A2D2_box"].to(device=device)
 
-#             # steering_output = model(inputs)
-#             steering_output, segmentation_output, box_output, depth_output = model(inputs)
-#             # print(segmentation_label)
-#             # print(segmentation_output)
+            if args.model == 'MTL':
+                steering_output, segmentation_output, box_output, depth_output = model(inputs)
+            else:
+                 box_output=model(inputs)
 
-#             str_metric_val=str_metric(steering_label,steering_output)
+            metric_value = task_metric(box_output, labels)
+        elif args.data == 'depth':
+            labels = data["A2D2_depth"].to(device=device)
 
-#             total_str_met=total_str_met+str_metric_val
+            if args.model == 'MTL':
+                steering_output, segmentation_output, box_output, depth_output = model(inputs)
+            else:
+                depth_output=model(inputs)
 
-final_seg_acc=total_seg_met/len(val_dataloader)
-final_depth_metric=total_depth_met/len(val_dataloader)
-final_str_metric=total_str_met/len(val_dataloader)
+            metric_value = task_metric(depth_output, labels)
+        
+        total_met += metric_value
 
 
-print(final_seg_acc)
 
-# final_box_metric=total_box_met/len(val_dataloader)
+          
 
-print(final_depth_metric)
-# print(final_box_metric)
-print(final_str_metric)
+final_metric=total_met/len(val_dataloader)
+
+print(final_metric)
 
 ### Segmentation
 # Universal single task: 92.99%
