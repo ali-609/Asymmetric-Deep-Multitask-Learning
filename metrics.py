@@ -37,15 +37,16 @@ import wandb
 from datetime import datetime
 import os
 import argparse
-
+import yaml
 
 torch.manual_seed(42)
-random.seed(42)
+
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data', choices=['segmentation', 'steering', 'box', 'depth'])
-parser.add_argument('--model', choices=['PilotNet', 'UNet', 'YOLO', 'DenseDepth','MTL'])
+parser.add_argument('--model', choices=['PilotNet', 'UNet', 'YOLO', 'DenseDepth', 'MTL'], required=True)
+parser.add_argument('--variant', choices=['symmetric', 'asymmetric'], default=None)
 parser.add_argument('--weights')
 
 
@@ -80,6 +81,8 @@ elif args.data == 'depth':
 print('No of total train samples', len(train_dataset))
 print('No of total validation Samples', len(val_dataset),'\n')
 
+with open('./configs/default_weights_conf.yaml', 'r') as config_file:
+    weight_config = yaml.safe_load(config_file)
 
 
 # train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True,num_workers=10)
@@ -88,19 +91,21 @@ val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_worker
 
 if args.model == 'MTL':
     model = ResNETBiFPN()
-    model.load_state_dict(torch.load('weights/universal_symmetric_2024-05-02_18-34-33.pth'))
+    weight_file = weight_config[f"{args.variant}_weight"] if args.variant else weight_config['symmetric_weight']
+    model.load_state_dict(torch.load(weight_file))
 elif args.model == 'UNet':
     model = UNet()
-    model.load_state_dict(torch.load('weights/segmentation_2024-04-21_00-16-07.pth'))
+    model.load_state_dict(torch.load(weight_config['single_task_weight']['segmentation']))
 elif args.model == 'YOLO':
     model = YOLOv1()
-    model.load_state_dict(torch.load('weights/yolo_2024-05-03_19-36-16.pth'))
+    model.load_state_dict(torch.load(weight_config['single_task_weight']['boundingbox']))
 elif args.model == 'DenseDepth':
     model = PTModel()
-    model.load_state_dict(torch.load('weights/depth_2024-04-24_01-22-43.pth'))
+    model.load_state_dict(torch.load(weight_config['single_task_weight']['depth']))
 elif args.model == 'PilotNet':
     model = PilotNet()
-    model.load_state_dict(torch.load('weights/steering_2024-04-25_04-27-04.pth'))
+    model.load_state_dict(torch.load(weight_config['steering']))
+
 
 if args.weights:
     model.load_state_dict(torch.load(args.weights))
