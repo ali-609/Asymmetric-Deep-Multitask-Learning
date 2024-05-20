@@ -48,17 +48,23 @@ random.seed(42)
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--task', choices=['segmentation','boundingbox', 'depth'])
-parser.add_argument('--sample',type=int)
+parser.add_argument('--task', choices=['segmentation','boundingbox', 'depth'],required=True)
+parser.add_argument('--sample',type=int,required=True)
 parser.add_argument('--threshold',type=float)
 
 
 
 args = parser.parse_args()
 
+if args.task == 'boundingbox' and args.threshold is None:
+    print("Error: --threshold is required when --task is 'boundingbox'")
+    exit()
+
 
 
 A2D2_path_train,A2D2_path_val=a2d2_dataloader()
+
+
 
 
 
@@ -74,6 +80,12 @@ elif args.task == 'depth':
 
 
 sample_no=args.sample
+
+if sample_no>=len(A2D2_path_val):
+    print('')
+    print('Sample does not exist, please choose integer smaller that ',len(A2D2_path_val))
+    exit()
+
 
 sample=val_dataset[sample_no]
 
