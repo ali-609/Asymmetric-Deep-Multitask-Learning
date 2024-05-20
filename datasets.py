@@ -14,9 +14,9 @@ import torchvision
 from torchvision import transforms
 import torchvision.transforms.functional as F
 import os
-from skimage.util import random_noise
+
 import glob
-from scipy.spatial.distance import cdist
+
 from PIL import Image
 import re
 
