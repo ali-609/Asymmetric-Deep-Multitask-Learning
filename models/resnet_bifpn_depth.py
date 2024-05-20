@@ -13,7 +13,7 @@ import torchvision
 from torchvision import transforms
 # import torchvision.transforms.functional as F
 import torchvision.models as models
-from skimage.util import random_noise
+
 import glob
 
 import torch
