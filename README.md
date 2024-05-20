@@ -2,9 +2,9 @@
 This is the code repository of the thesis "Asymmetric Deep Multitask Learning." The repo has tools to automate the downloading, extracting, and processing of the A2D2 database for four tasks. In addition, the repo provides code to train several models and visualization tools.
 
 # System requirements:
-x86 CPU with at least four core <br>
+x86 CPU with at least 8 core <br>
 CUDA capable Nvidia GPU with 12GB VRAM <br>
-16GB RAM <br>
+32GB RAM <br>
 conda: 24.1.0 <br>
 glibc: 2.17 <br>
 1 TB storage <br>
@@ -121,7 +121,46 @@ python train_asymmetric.py
 ```
 
 # Evaluation
+The script mentioned below is to obtain pre-trained weights that were used during research:
+```
+sh get_weight.sh
+```
+These weights are also listed in the 'configs/default_weights_conf.yaml' file, which defines default weights if the user doesn't enter the weight file during evaluation.
+```
+# configs/default_weights_conf.yaml
+asymmetric_weight: 'weights/universal_asymmetric_2024-05-07_20-56-31.pth'
 
+symmetric_weight: 'weights/universal_symmetric_2024-05-02_18-34-33.pth'
+
+single_task_weight:
+  segmentation: 'weights/segmentation_2024-04-21_00-16-07.pth' 
+  boundingbox: 'weights/yolo_2024-05-03_19-36-16.pth'
+  depth: 'weights/depth_2024-04-24_01-22-43.pth'
+  steering: 'weights/steering_2024-04-25_04-27-04.pth'
+
+universal_task_weight:
+  segmentation: 'weights/universal_segmentation_2024-05-01_10-42-53.pth'
+  boundingbox: 'weights/universal_box_2024-05-02_18-42-46.pth'
+  depth: 'weights/universal_depth_2024-05-01_10-41-17.pth'
+  steering: 'weights/universal_steering_2024-05-02_18-44-59.pth'
+```
+
+
+## Metric calculation
+The below program is used to calculate metrics for given configuration:
+```
+python metrics.py --data ['segmentation', 'steering', 'boundingbox', 'depth'] --model ['PilotNet', 'UNet', 'YOLO', 'DenseDepth', 'MTL'] --variant ['symmetric', 'asymmetric','single-task'] --weights /path/to/weight/file
+```
+
+Among arguments, '--data' and '--model' are required, and the '--weights' argument is optional in case the user doesn't use that argument; the program takes weights from 'configs/default_weights_conf.yaml'.
+'--variant' argument is used when the 'MTL' option is used and '--weights' option is not used, this argument determines which version program should take among the default weights of the MTL architecture
+
+## Visualisation
+The below program visualizes the outputs of asymmetric-trained MTL, symmetric-trained MTL, single-label-trained MTL, and STL models and stores them in one folder.
+```
+python visualize.py --task ['segmentation','boundingbox', 'depth'] --sample range(0, 2486) --threshold (float)
+```
+The program stores all results with ground truth labels in the 'results/{task}/{sample}/' structured directory. Among arguments, '--task' and '--sample' are required arguments. The '--threshold' argument is only needed for the bounding box task.
 
 
 
