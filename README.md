@@ -5,16 +5,19 @@ This is the code repository of the thesis "Asymmetric Deep Multitask Learning." 
 x86 CPU with at least four core <br>
 Nvidia GPU with 12GB VRAM <br>
 16GB RAM <br>
-Conda 24.1.0 <br>
+conda: 24.1.0 <br>
+glibc: 2.17 <br>
 1 TB storage <br>
 The codebase was developed on HPC, and some processes may cause overhead in consumer laptops or PCs. If feasible, please run the code on either an HPC or a high-performance workstation.
 
-# Conda environment
-Use the given yaml file to create a conda environmet:
-```
-conda env create -f ADMTL_environment.yml
-conda activate admlt_env
-```
+# Setting environment
+Use the given yml file to create a conda environment:
+
+In case yml file fail, try to install mentioned libraries manually:
+numpy, pillow, opencv-python, torch, torchvision, argparse, tqdm, wandb
+
+To initialize wandb, please refer 'https://docs.wandb.ai/quickstart'
+
 
 # Data
 ## Preparing data
@@ -63,6 +66,8 @@ The table below gives information about which code train, what kind of model, an
 | train_single_task.py  | configs/single_task_conf.yaml  | PilotNet for Steering angle prediction; UNet for semantic segmentation, DenseDepth for depth estimation, YOLOv1  for bounding box estimation |
 | train_symmetric.py  | configs/symmetric_conf.yaml  | MTL with symmetric labels, MTL with one label presenting among 4 present  |
 | train_asymmetric.py  |  configs/asymmetric_conf.yaml | Asymmetric MTL  |
+
+
 
 
 
