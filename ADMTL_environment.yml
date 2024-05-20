@@ -1,4 +1,4 @@
-name: ADMTL_env
+name: admlt_env
 channels:
   - pytorch
   - nvidia
