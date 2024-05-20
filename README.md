@@ -3,7 +3,7 @@ This is the code repository of the thesis "Asymmetric Deep Multitask Learning." 
 
 # System requirements:
 x86 CPU with at least four core <br>
-Nvidia GPU with 12GB VRAM <br>
+CUDA capable Nvidia GPU with 12GB VRAM <br>
 16GB RAM <br>
 conda: 24.1.0 <br>
 glibc: 2.17 <br>
