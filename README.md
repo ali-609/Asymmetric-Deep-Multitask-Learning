@@ -12,6 +12,10 @@ The codebase was developed on HPC, and some processes may cause overhead in cons
 
 # Setting environment
 Use the given yml file to create a conda environment:
+```
+conda env create -f ADMTL_environment.yml
+conda activate admtl_env
+```
 
 In case yml file fail, try to install mentioned libraries manually:
 numpy, pillow, opencv-python, torch, torchvision, argparse, tqdm, wandb
