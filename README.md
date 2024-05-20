@@ -145,6 +145,9 @@ universal_task_weight:
   steering: 'weights/universal_steering_2024-05-02_18-44-59.pth'
 ```
 
+It is recommended to download weights by script or train and obtain weights files for all possible cases in 'configs/default_weights_conf.yaml'.
+After training, new weights need to be entered into 'configs/default_weights_conf.yaml'
+
 
 ## Metric calculation
 The below program is used to calculate metrics for given configuration:
