@@ -3,7 +3,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 import numpy as np
-import pandas as pd
+
 import torch
 from torch.nn import L1Loss, MSELoss, HuberLoss
 from torch.utils.data import ConcatDataset, RandomSampler, WeightedRandomSampler
@@ -44,9 +44,9 @@ torch.manual_seed(42)
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data', choices=['segmentation', 'steering', 'box', 'depth'])
+parser.add_argument('--data', choices=['segmentation', 'steering', 'boundingbox', 'depth'])
 parser.add_argument('--model', choices=['PilotNet', 'UNet', 'YOLO', 'DenseDepth', 'MTL'], required=True)
-parser.add_argument('--variant', choices=['symmetric', 'asymmetric'], default=None)
+parser.add_argument('--variant', choices=['symmetric', 'asymmetric','single-task'], default=None)
 parser.add_argument('--weights')
 
 
@@ -68,7 +68,7 @@ if args.data == 'segmentation':
 elif args.data == 'steering':
     train_dataset = A2D2_steering(A2D2_path_train)
     val_dataset = A2D2_steering(A2D2_path_val)
-elif args.data == 'box':
+elif args.data == 'boundingbox':
     train_dataset = A2D2_box(A2D2_path_train)
     val_dataset = A2D2_box(A2D2_path_val)
 elif args.data == 'depth':
@@ -91,7 +91,10 @@ val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_worker
 
 if args.model == 'MTL':
     model = ResNETBiFPN()
-    weight_file = weight_config[f"{args.variant}_weight"] if args.variant else weight_config['symmetric_weight']
+    if args.variant == 'single-task':
+        weight_file=weight_config['universal_task_weight'][args.data]
+    else:
+        weight_file = weight_config[f"{args.variant}_weight"] if args.variant else weight_config['asymmetric_weight']
     model.load_state_dict(torch.load(weight_file))
 elif args.model == 'UNet':
     model = UNet()
@@ -256,7 +259,7 @@ if args.data == 'segmentation':
     task_metric = SegmentationAccuracy()
 elif args.data == 'steering':
     task_metric = SteeringMetric()
-elif args.data == 'box':
+elif args.data == 'boundingbox':
     task_metric = BoxAccuracy()
 elif args.data == 'depth':
     task_metric = MaskedL1Loss()
@@ -291,7 +294,7 @@ with torch.no_grad():
 
             metric_value = task_metric(labels, steering_output)
 
-        elif args.data == 'box':
+        elif args.data == 'boundingbox':
             labels = data["A2D2_box"].to(device=device)
 
             if args.model == 'MTL':
