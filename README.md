@@ -61,7 +61,7 @@ The table below gives information about which code train, what kind of model, an
 | Program file  | YAML file |  Possible train configurations |
 | ------------- | ------------- |------------- |
 | train_single_task.py  | configs/single_task_conf.yaml  | PilotNet for Steering angle prediction; UNet for semantic segmentation, DenseDepth for depth estimation, YOLOv1  for bounding box estimation |
-| train_symmetric.py  | configs/symmetric_conf.yaml  | Symmetric MTL, MTL with only one label among 4 present  |
+| train_symmetric.py  | configs/symmetric_conf.yaml  | MTL with symmetric labels, MTL with one label presenting among 4 present  |
 | train_asymmetric.py  |  configs/asymmetric_conf.yaml | Asymmetric MTL  |
 
 
