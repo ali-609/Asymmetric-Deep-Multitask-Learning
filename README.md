@@ -68,6 +68,37 @@ The table below gives information about which code train, what kind of model, an
 | train_asymmetric.py  |  configs/asymmetric_conf.yaml | Asymmetric MTL  |
 
 
+It is highly recommended to check the YAML file of the training program before any training process.
+
+
+Example YAML file:
+```
+batch_sizes:  accumulate steps for decoders and backbone
+  batch_backbone: 48
+  batch_steering: 24
+  batch_segmentation: 32
+  batch_box: 16
+  batch_depth: 16
+
+learning_rates: # learning rates optimizers of decoders and backbone
+  backbone_lr: 0.002
+  segmentation_lr: 0.0002
+  steering_lr: 0.00004
+  box_lr: 0.00001
+  depth_lr: 0.00003
+
+coefficients:  # coefficients to balance loss functions
+  steering_coef: 1
+  segmentation_coef: 80
+  box_coef: 400
+  depth_coef: 200
+ 
+n_epochs: 10 # number of train epoch 
+
+num_workers: 8 #number of CPU cores
+
+```
+
 ### Single task train
 Single-task training includes training specialized single-task models on single-label data.
 ```
@@ -84,10 +115,12 @@ python train_symmetric.py --train-mode choices=['segmentation', 'steering', 'box
 '--train-mode' takes one of one of five possible arguments. If no arguments are given, the program will use a symmetric configuration.
 
 ### Asymmetric Multi task train
+The below program train MTL on asymmetric labels:
 ```
 python train_asymmetric.py
 ```
 
+# Evaluation
 
 
 
