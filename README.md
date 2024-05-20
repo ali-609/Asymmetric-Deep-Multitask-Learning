@@ -55,11 +55,14 @@ Unlike the preprocessing of other labels for steering angle labels, no parallel 
 
 
 # Train
-## Train parameters
-| First Header  | Second Header |Second Header |
+Some models have too many parameters, making using command-line arguments a bit inconvenient. For that reason, train parameters like learning rate or batch size are stored in .yaml files in 'configs/' directory.
+The table below gives information about which code train, what kind of model, and the associated .yaml file.
+
+| Program file  | YAML file |  Possible train configurations |
 | ------------- | ------------- |------------- |
-| Content Cell  | Content Cell  |Content Cell  |
-| Content Cell  | Content Cell  |Content Cell  |
+| train_single_task.py  | configs/single_task_conf.yaml  | PilotNet for Steering angle prediction; UNet for semantic segmentation, DenseDepth for depth estimation, YOLOv1  for bounding box estimation |
+| train_symmetric.py  | configs/symmetric_conf.yaml  | Symmetric MTL, MTL with only one label among 4 present  |
+| train_asymmetric.py  |  configs/asymmetric_conf.yaml | Asymmetric MTL  |
 
 
 
