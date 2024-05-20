@@ -208,9 +208,13 @@ depth_trainer = AsymmetricTrainer(optimizer=depth_optimizer, batch_size=batch_de
 
 filename = f"weights/{base_name}_{current_time}.pth"
 run_name = f"{base_name}_{current_time}"
-
-wandb.init(project="thesis_final", config=config, name=run_name)
+if not wandb.api.api_key:
+    print("User not logged in. Switching to offline mode.")
+    wandb.init(mode="offline")
+else:
+    wandb.init(project="thesis_final", config=config, name=run_name) 
 wandb.watch(model)
+    
 for epoch in range(n_epochs):
 
     model.train()
