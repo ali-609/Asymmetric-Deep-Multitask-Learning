@@ -55,7 +55,11 @@ Unlike the preprocessing of other labels for steering angle labels, no parallel 
 
 
 # Train
-
+## Train parameters
+| First Header  | Second Header |Second Header |
+| ------------- | ------------- |------------- |
+| Content Cell  | Content Cell  |Content Cell  |
+| Content Cell  | Content Cell  |Content Cell  |
 
 
 
