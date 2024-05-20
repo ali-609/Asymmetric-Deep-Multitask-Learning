@@ -68,6 +68,27 @@ The table below gives information about which code train, what kind of model, an
 | train_asymmetric.py  |  configs/asymmetric_conf.yaml | Asymmetric MTL  |
 
 
+### Single task train
+Single-task training includes training specialized single-task models on single-label data.
+```
+python train_single_task.py --train-mode ['segmentation', 'steering', 'box', 'depth']
+```
+'--train-mode' takes one of four given arguments and can't take multiple arguments. If no argument is given, the program train not run.
+
+
+### Multi task train
+The program can train MTL architecture in five configurations: Symmetric labels, where all labels are presented, or one of four possible labels.
+```
+python train_symmetric.py --train-mode choices=['segmentation', 'steering', 'box', 'depth', 'symmetric'], default='symmetric'
+```
+'--train-mode' takes one of one of five possible arguments. If no arguments are given, the program will use a symmetric configuration.
+
+### Asymmetric Multi task train
+```
+python train_asymmetric.py
+```
+
+
 
 
 
