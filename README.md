@@ -6,13 +6,14 @@ x86 CPU with at least four core <br>
 Nvidia GPU with 12GB VRAM <br>
 16GB RAM <br>
 Conda 24.1.0 <br>
+1 TB storage <br>
 The codebase was developed on HPC, and some processes may cause overhead in consumer laptops or PCs. If feasible, please run the code on either an HPC or a high-performance workstation.
 
 # Conda environment
 Use the given yaml file to create a conda environmet:
 ```
 conda env create -f ADMTL_environment.yml
-conda activate ADMTL_environment
+conda activate admlt_env
 ```
 
 # Data
@@ -40,5 +41,24 @@ python preprocessing/depth_preprocess.py --threads 4
 This code also uses several CPU cores parallelly, but preprocessing depth labels takes much less time than the segmentation one. With sufficient CPU cores, preprocessing all depth labels takes 10-15 minutes.
 
 ### Bounding Box labels
+This code cleans duplicate 2D bounding boxes and stores them in separate files.
+```
+python preprocessing/bounding_box.py --threads 4
+```
+
+### Steering angle labels
+The below code takes bus gateway information of every frame from one big .json file and stores them in smaller files.
+```
+ python preprocessing/steering_angle.py 
+```
+Unlike the preprocessing of other labels for steering angle labels, no parallel CPU core is used as code takes about a minute in one CPU core to preprocess all labels.
+
+
+# Train
+
+
+
+
+
 
 
