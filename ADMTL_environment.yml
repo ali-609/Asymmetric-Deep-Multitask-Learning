@@ -1,4 +1,4 @@
-name: admlt_env
+name: admtl_env
 channels:
   - conda-forge
 dependencies:
